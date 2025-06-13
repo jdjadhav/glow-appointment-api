@@ -1,6 +1,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Activity, Calendar, Users, Stethoscope } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const FeaturesSection = () => {
   const features = [
@@ -8,25 +9,29 @@ const FeaturesSection = () => {
       icon: Calendar,
       title: "Appointment Booking",
       description: "Easy scheduling with healthcare providers, automated reminders, and seamless calendar integration.",
-      color: "text-blue-600 bg-blue-100"
+      color: "text-blue-600 bg-blue-100",
+      link: "/booking"
     },
     {
       icon: Activity,
       title: "Telemedicine",
       description: "Connect with certified healthcare professionals for virtual consultations and medical advice.",
-      color: "text-green-600 bg-green-100"
+      color: "text-green-600 bg-green-100",
+      link: "/telemedicine"
     },
     {
       icon: Users,
       title: "Dermascan",
       description: "Advanced dermatology scanning technology for skin health monitoring and early detection.",
-      color: "text-purple-600 bg-purple-100"
+      color: "text-purple-600 bg-purple-100",
+      link: "/dermascan"
     },
     {
       icon: Stethoscope,
       title: "SOS",
       description: "Emergency medical assistance and urgent care services available 24/7 for critical situations.",
-      color: "text-red-600 bg-red-100"
+      color: "text-red-600 bg-red-100",
+      link: "/sos"
     }
   ];
 
@@ -44,19 +49,21 @@ const FeaturesSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-2 border-border">
-              <CardContent className="p-8 text-center">
-                <div className={`inline-flex p-4 rounded-full ${feature.color} mb-6 group-hover:scale-110 transition-transform`}>
-                  <feature.icon className="w-8 h-8" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground mb-4">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {feature.description}
-                </p>
-              </CardContent>
-            </Card>
+            <Link key={index} to={feature.link} className="block">
+              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-2 border-border cursor-pointer">
+                <CardContent className="p-8 text-center">
+                  <div className={`inline-flex p-4 rounded-full ${feature.color} mb-6 group-hover:scale-110 transition-transform`}>
+                    <feature.icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-4">
+                    {feature.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>

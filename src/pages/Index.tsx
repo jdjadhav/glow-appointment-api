@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import Navigation from "@/components/Navigation";
 import FeaturesSection from "@/components/FeaturesSection";
 import BookingSection from "@/components/BookingSection";
 
@@ -33,18 +35,7 @@ const Index = () => {
   if (showBooking) {
     return (
       <div className="min-h-screen">
-        <div className="bg-white shadow-sm border-b">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-800">
-                SkinCare Pro Clinic
-              </h1>
-              <Button variant="outline" onClick={() => setShowBooking(false)}>
-                Back to Home
-              </Button>
-            </div>
-          </div>
-        </div>
+        <Navigation />
         <BookingSection />
       </div>
     );
@@ -52,6 +43,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <Navigation />
+      
       {/* Hero Section */}
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
@@ -70,14 +63,16 @@ const Index = () => {
               <Calendar className="w-5 h-5 mr-2" />
               Book Appointment
             </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="px-8 py-4 text-lg"
-            >
-              Learn More
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
+            <Link to="/about">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="px-8 py-4 text-lg"
+              >
+                Learn More
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
