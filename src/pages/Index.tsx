@@ -1,11 +1,9 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, User, Mail, Phone } from "lucide-react";
-import DoctorSelection from "@/components/DoctorSelection";
-import AppointmentForm from "@/components/AppointmentForm";
-import ConfirmationView from "@/components/ConfirmationView";
+import { Calendar, ArrowRight } from "lucide-react";
+import FeaturesSection from "@/components/FeaturesSection";
+import BookingSection from "@/components/BookingSection";
 
 export interface Doctor {
   id: string;
@@ -30,99 +28,81 @@ export interface Appointment {
 }
 
 const Index = () => {
-  const [currentStep, setCurrentStep] = useState<'selection' | 'form' | 'confirmation'>('selection');
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
-  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [showBooking, setShowBooking] = useState(false);
 
-  const handleDoctorSelect = (doctor: Doctor) => {
-    setSelectedDoctor(doctor);
-    setCurrentStep('form');
-  };
-
-  const handleAppointmentSubmit = (appointmentData: Appointment) => {
-    setAppointment(appointmentData);
-    setCurrentStep('confirmation');
-    
-    // Simulate API calls that would happen in a real backend
-    console.log('Appointment booked:', appointmentData);
-    console.log('Would send confirmation email to doctor:', selectedDoctor?.email);
-    console.log('Would send acceptance email to patient:', appointmentData.patientEmail);
-    console.log('Would create Google Calendar event for:', appointmentData.date, appointmentData.time);
-  };
-
-  const handleBackToSelection = () => {
-    setCurrentStep('selection');
-    setSelectedDoctor(null);
-  };
-
-  const handleBookAnother = () => {
-    setCurrentStep('selection');
-    setSelectedDoctor(null);
-    setAppointment(null);
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            SkinCare Pro Clinic
-          </h1>
-          <p className="text-xl text-gray-600">
-            Book your appointment with our expert dermatologists
-          </p>
-        </div>
-
-        {/* Progress Indicator */}
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center space-x-4">
-            <div className={`flex items-center space-x-2 ${currentStep === 'selection' ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'selection' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-                <User className="w-4 h-4" />
-              </div>
-              <span>Select Doctor</span>
-            </div>
-            <div className="w-8 h-px bg-gray-300"></div>
-            <div className={`flex items-center space-x-2 ${currentStep === 'form' ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'form' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-                <Calendar className="w-4 h-4" />
-              </div>
-              <span>Book Appointment</span>
-            </div>
-            <div className="w-8 h-px bg-gray-300"></div>
-            <div className={`flex items-center space-x-2 ${currentStep === 'confirmation' ? 'text-green-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'confirmation' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>
-                <Mail className="w-4 h-4" />
-              </div>
-              <span>Confirmation</span>
+  if (showBooking) {
+    return (
+      <div className="min-h-screen">
+        <div className="bg-white shadow-sm border-b">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold text-gray-800">
+                SkinCare Pro Clinic
+              </h1>
+              <Button variant="outline" onClick={() => setShowBooking(false)}>
+                Back to Home
+              </Button>
             </div>
           </div>
         </div>
-
-        {/* Main Content */}
-        <div className="max-w-4xl mx-auto">
-          {currentStep === 'selection' && (
-            <DoctorSelection onDoctorSelect={handleDoctorSelect} />
-          )}
-          
-          {currentStep === 'form' && selectedDoctor && (
-            <AppointmentForm 
-              doctor={selectedDoctor}
-              onSubmit={handleAppointmentSubmit}
-              onBack={handleBackToSelection}
-            />
-          )}
-          
-          {currentStep === 'confirmation' && appointment && selectedDoctor && (
-            <ConfirmationView 
-              appointment={appointment}
-              doctor={selectedDoctor}
-              onBookAnother={handleBookAnother}
-            />
-          )}
-        </div>
+        <BookingSection />
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      {/* Hero Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-5xl font-bold text-gray-800 mb-6">
+            SkinCare Pro Clinic
+          </h1>
+          <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Your trusted partner for comprehensive dermatology care and advanced skin health solutions
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              onClick={() => setShowBooking(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg"
+            >
+              <Calendar className="w-5 h-5 mr-2" />
+              Book Appointment
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="px-8 py-4 text-lg"
+            >
+              Learn More
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <FeaturesSection />
+
+      {/* Call to Action */}
+      <section className="py-20 bg-blue-600">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Ready to Take Care of Your Skin?
+          </h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Join thousands of satisfied patients who trust us with their dermatological care.
+          </p>
+          <Button 
+            size="lg" 
+            onClick={() => setShowBooking(true)}
+            className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg"
+          >
+            Schedule Your Consultation Today
+          </Button>
+        </div>
+      </section>
     </div>
   );
 };
