@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar, ArrowRight } from "lucide-react";
@@ -27,6 +26,9 @@ export interface Appointment {
   time: string;
   service: string;
   notes?: string;
+  googleCalendarEventId?: string;
+  meetingUrl?: string;
+  meetingCode?: string;
 }
 
 const Index = () => {

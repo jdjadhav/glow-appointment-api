@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ArrowLeft, Clock, User } from "lucide-react";
+import { Calendar, ArrowLeft, Clock, User, Video, Loader2 } from "lucide-react";
 import { Doctor, Appointment } from "@/pages/Index";
+import { createCalendarEvent, createMeetingRoom, sendCalendarInvitations, sendAppointmentEmails } from "@/utils/googleServices";
 
 interface AppointmentFormProps {
   doctor: Doctor;
@@ -22,8 +23,12 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ doctor, onSubmit, onB
     date: '',
     time: '',
     service: 'consultation',
-    notes: ''
+    notes: '',
+    includeVideoCall: true
   });
+
+  const [isBooking, setIsBooking] = useState(false);
+  const [bookingStep, setBookingStep] = useState('');
 
   const services = [
     'General Consultation',
@@ -36,25 +41,79 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ doctor, onSubmit, onB
     'Botox Treatment'
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsBooking(true);
     
-    const appointment: Appointment = {
-      id: Date.now().toString(),
-      doctorId: doctor.id,
-      patientName: formData.patientName,
-      patientEmail: formData.patientEmail,
-      patientPhone: formData.patientPhone,
-      date: formData.date,
-      time: formData.time,
-      service: formData.service,
-      notes: formData.notes
-    };
-    
-    onSubmit(appointment);
+    try {
+      // Step 1: Create Calendar Event
+      setBookingStep('Creating calendar event...');
+      const calendarEvent = await createCalendarEvent(
+        formData.patientName,
+        formData.patientEmail,
+        doctor.name,
+        doctor.email,
+        formData.date,
+        formData.time,
+        formData.service,
+        formData.notes
+      );
+
+      let meetingUrl = '';
+      let meetingCode = '';
+
+      // Step 2: Create Google Meet Room (if video call is included)
+      if (formData.includeVideoCall) {
+        setBookingStep('Setting up video conference...');
+        const meetResponse = await createMeetingRoom(calendarEvent.id);
+        meetingUrl = meetResponse.meetingUrl;
+        meetingCode = meetResponse.meetingCode;
+      }
+
+      // Step 3: Send Calendar Invitations
+      setBookingStep('Sending calendar invitations...');
+      await sendCalendarInvitations(calendarEvent);
+
+      // Step 4: Send Email Notifications
+      setBookingStep('Sending confirmation emails...');
+      await sendAppointmentEmails(
+        formData.patientEmail,
+        doctor.email,
+        formData,
+        meetingUrl
+      );
+
+      // Step 5: Create final appointment object
+      const appointment: Appointment = {
+        id: calendarEvent.id,
+        doctorId: doctor.id,
+        patientName: formData.patientName,
+        patientEmail: formData.patientEmail,
+        patientPhone: formData.patientPhone,
+        date: formData.date,
+        time: formData.time,
+        service: formData.service,
+        notes: formData.notes,
+        googleCalendarEventId: calendarEvent.id,
+        meetingUrl: meetingUrl,
+        meetingCode: meetingCode
+      };
+
+      setBookingStep('Finalizing appointment...');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      onSubmit(appointment);
+    } catch (error) {
+      console.error('Error booking appointment:', error);
+      setBookingStep('Error occurred. Please try again.');
+      setTimeout(() => {
+        setIsBooking(false);
+        setBookingStep('');
+      }, 2000);
+    }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -62,6 +121,38 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ doctor, onSubmit, onB
   };
 
   const isFormValid = formData.patientName && formData.patientEmail && formData.patientPhone && formData.date && formData.time;
+
+  if (isBooking) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
+              <h3 className="text-lg font-semibold">Booking Your Appointment</h3>
+              <p className="text-gray-600">{bookingStep}</p>
+              <div className="space-y-2 text-sm text-gray-500">
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Integrating with Google Calendar</span>
+                </div>
+                {formData.includeVideoCall && (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Setting up Google Meet</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Sending notifications</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -185,6 +276,30 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ doctor, onSubmit, onB
               </div>
             </div>
 
+            {/* Video Call Option */}
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center">
+                <Video className="w-4 h-4 mr-2" />
+                Video Consultation
+              </h3>
+              
+              <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="includeVideoCall"
+                  checked={formData.includeVideoCall}
+                  onChange={(e) => handleInputChange('includeVideoCall', e.target.checked)}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <Label htmlFor="includeVideoCall" className="flex-1">
+                  Include Google Meet video call for remote consultation
+                  <p className="text-sm text-gray-600 mt-1">
+                    A Google Meet link will be automatically generated and included in your calendar invitation
+                  </p>
+                </Label>
+              </div>
+            </div>
+
             {/* Service Selection */}
             <div>
               <Label htmlFor="service">Type of Service</Label>
@@ -214,12 +329,23 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ doctor, onSubmit, onB
               />
             </div>
 
+            {/* Google Integration Notice */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h4 className="font-medium text-green-800 mb-2">Google Services Integration</h4>
+              <ul className="text-sm text-green-700 space-y-1">
+                <li>✓ Automatic Google Calendar event creation</li>
+                <li>✓ Calendar invitations sent to both patient and doctor</li>
+                {formData.includeVideoCall && <li>✓ Google Meet video conference setup</li>}
+                <li>✓ Email confirmations with meeting details</li>
+              </ul>
+            </div>
+
             <Button 
               type="submit" 
               className="w-full"
               disabled={!isFormValid}
             >
-              Book Appointment
+              Book Appointment with Google Integration
             </Button>
           </form>
         </CardContent>
